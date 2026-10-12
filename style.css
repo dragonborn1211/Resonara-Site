@@ -134,6 +134,59 @@ ul { list-style: none; }
 .hidden { display: none !important; }
 
 /* =========================================================
+   ПОЛОСА ПРОКРУТКИ: струна и бусина кармы
+   ========================================================= */
+/* Firefox понимает только цвета */
+@supports not selector(::-webkit-scrollbar) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--accent) 80%, var(--void)) var(--void);
+  }
+}
+
+/* Chrome, Edge, Safari, Opera: жёлоб со струной посередине */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  background: var(--void);
+}
+::-webkit-scrollbar-track {
+  background:
+    linear-gradient(90deg,
+      transparent calc(50% - 0.5px),
+      color-mix(in srgb, var(--gold) 45%, transparent) calc(50% - 0.5px) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)),
+    linear-gradient(90deg, #040308, var(--void-2) 50%, #040308);
+  box-shadow: inset 1px 0 0 var(--line);
+}
+/* Ползунок — бусина, нанизанная на струну */
+::-webkit-scrollbar-thumb {
+  min-height: 64px;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg,
+      transparent calc(50% - 0.5px),
+      rgba(16, 10, 4, 0.5) calc(50% - 0.5px) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)) padding-box,
+    radial-gradient(ellipse 80% 22% at 50% 18%, rgba(255, 250, 232, 0.85), transparent 75%) padding-box,
+    linear-gradient(180deg, var(--accent-hi), var(--accent) 55%, color-mix(in srgb, var(--accent) 50%, #000)) padding-box;
+}
+::-webkit-scrollbar-thumb:hover { border-width: 2px; }
+::-webkit-scrollbar-thumb:active {
+  border-width: 2px;
+  background:
+    linear-gradient(90deg,
+      transparent calc(50% - 0.5px),
+      rgba(16, 10, 4, 0.4) calc(50% - 0.5px) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)) padding-box,
+    radial-gradient(ellipse 80% 30% at 50% 22%, #fff, transparent 75%) padding-box,
+    linear-gradient(180deg, #fff6dc, var(--accent-hi) 40%, var(--accent)) padding-box;
+}
+::-webkit-scrollbar-button { display: none; }
+::-webkit-scrollbar-corner { background: var(--void); }
+
+/* =========================================================
    ФОН
    ========================================================= */
 .bg {

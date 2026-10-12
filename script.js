@@ -569,12 +569,15 @@ function createStringField(canvas, reduceMotion) {
   const segY = (k) => -PAD + span() * (k / SEG);
   const restX = (s, y) => s.xt + (s.xb - s.xt) * ((y + PAD) / span());
 
-  function makeMote(anywhere) {
+  // from: 'anywhere' — по всему экрану, 'top' — сверху, иначе снизу
+  function makeMote(from) {
+    const r = 0.5 + Math.random() * 1.5;
     return {
       x: Math.random() * W,
-      y: anywhere ? Math.random() * H : H + 12,
+      y: from === 'anywhere' ? Math.random() * H : from === 'top' ? -12 : H + 12,
       vy: -(0.12 + Math.random() * 0.34),
-      r: 0.5 + Math.random() * 1.5,
+      r,
+      depth: 0.12 + ((r - 0.5) / 1.5) * 0.38, // крупные частицы «ближе» и сильнее смещаются при прокрутке
       a: 0.25 + Math.random() * 0.6,
       ph: Math.random() * Math.PI * 2,
       sway: 0.15 + Math.random() * 0.4
@@ -604,7 +607,7 @@ function createStringField(canvas, reduceMotion) {
     });
 
     const moteCount = W < 760 ? 28 : 60;
-    while (motes.length < moteCount) motes.push(makeMote(true));
+    while (motes.length < moteCount) motes.push(makeMote('anywhere'));
     motes.length = moteCount;
     if (!motion) draw();
   }
@@ -707,7 +710,7 @@ function createStringField(canvas, reduceMotion) {
         const d = m.x - restX(s, m.y);
         if (Math.abs(d) < 46) m.x += Math.sign(d) * s.energy * 0.05 * (1 - Math.abs(d) / 46);
       }
-      if (m.y < -12 || m.x < -20 || m.x > W + 20) Object.assign(m, makeMote(false));
+      if (m.y < -12 || m.y > H + 12 || m.x < -20 || m.x > W + 20) Object.assign(m, makeMote(m.y > H + 12 ? 'top' : 'bottom'));
     }
 
     for (let i = sparks.length - 1; i >= 0; i--) {
@@ -790,8 +793,25 @@ function createStringField(canvas, reduceMotion) {
     ctx.globalCompositeOperation = 'source-over';
   }
 
+  // Прокрутка: частицы уходят с параллаксом, струны отзываются гулом
+  let lastScroll = window.scrollY;
+  let scrollShift = 0;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (motion) scrollShift += y - lastScroll;
+    lastScroll = y;
+  }, { passive: true });
+
+  function applyScroll(d) {
+    d = Math.max(-400, Math.min(400, d));
+    const hum = Math.min(0.35, Math.abs(d) / 160);
+    for (const m of motes) m.y -= d * m.depth;
+    for (const s of strings) s.glow = Math.max(s.glow, hum);
+  }
+
   function frame(now) {
     raf = requestAnimationFrame(frame);
+    if (scrollShift) { applyScroll(scrollShift); scrollShift = 0; }
     const dt = Math.min(100, now - (last || now));
     last = now;
     acc += dt;
